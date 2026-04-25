@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { RateOrderDto } from './dto/rate-order.dto';
 
@@ -16,6 +17,7 @@ export class OrdersService {
   constructor(
     private supabase: SupabaseService,
     private config: ConfigService,
+    private notifications: NotificationsService,
   ) {
     this.commissionRate = parseFloat(config.get('COMMISSION_RATE', '0.15'));
   }
@@ -176,6 +178,16 @@ export class OrdersService {
       .single();
 
     if (updateError) throw new BadRequestException(updateError.message);
+
+    // Notificar al consumidor que su pedido fue confirmado
+    this.notifications
+      .notifyOrderStatus(
+        order.consumer_id,
+        '✅ Pedido confirmado',
+        `Tu pedido #${order.order_code} fue escaneado. ¡Disfrútalo!`,
+        { orderId: order.id, screen: 'OrderDetail' },
+      )
+      .catch(() => {}); // fire-and-forget
 
     // TODO: disparar Stripe transfer (restaurant_payout al stripe_account_id)
 

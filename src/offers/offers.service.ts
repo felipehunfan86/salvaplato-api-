@@ -4,12 +4,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { UpdateOfferDto } from './dto/update-offer.dto';
 
 @Injectable()
 export class OffersService {
-  constructor(private supabase: SupabaseService) {}
+  constructor(
+    private supabase: SupabaseService,
+    private notifications: NotificationsService,
+  ) {}
 
   // Listar ofertas activas — público
   async findAll(category?: string, restaurantId?: string) {
@@ -79,10 +83,21 @@ export class OffersService {
         photo_url: dto.photoUrl,
         pickup_deadline: dto.pickupDeadline,
       })
-      .select()
+      .select('*, restaurants(name)')
       .single();
 
     if (error) throw new NotFoundException(error.message);
+
+    // Notificar a consumidores que tienen este restaurante en favoritos
+    this.notifications
+      .notifyFavoritesOfNewOffer(
+        dto.restaurantId,
+        data.restaurants.name,
+        data.title,
+        data.emoji ?? '🍽️',
+      )
+      .catch(() => {}); // fire-and-forget
+
     return data;
   }
 
