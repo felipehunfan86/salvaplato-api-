@@ -7,10 +7,16 @@
   NODE_VERSION = "20"
 
 [functions]
-  # nft (Node File Tracing) incluye dist/ sin recompilar con esbuild
   node_bundler = "nft"
 
-# Redirige todas las llamadas a la API a la función serverless
+# /api sin trailing slash
+[[redirects]]
+  from = "/api"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+# /api/cualquier/ruta
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api"
