@@ -21,14 +21,17 @@ export class AuthService {
     });
 
     if (error) throw new ConflictException(error.message);
+    if (!data.user) throw new ConflictException('No se pudo crear la cuenta');
 
-    // El trigger crea el profile. Actualizamos zone si viene.
-    if (data.user && dto.zone) {
-      await this.supabase.admin
-        .from('profiles')
-        .update({ zone: dto.zone })
-        .eq('id', data.user.id);
-    }
+    // Insertar perfil directamente (no depender solo del trigger)
+    await this.supabase.admin
+      .from('profiles')
+      .upsert({
+        id: data.user.id,
+        full_name: dto.fullName,
+        phone: dto.phone,
+        zone: dto.zone ?? null,
+      });
 
     return { user: data.user, session: data.session };
   }
