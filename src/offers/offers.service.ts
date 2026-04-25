@@ -66,12 +66,12 @@ export class OffersService {
 
   // Crear oferta — dueño autenticado
   async create(userId: string, dto: CreateOfferDto) {
-    await this.assertRestaurantOwner(userId, dto.restaurantId);
+    const restaurant = await this.getRestaurantByOwner(userId);
 
     const { data, error } = await this.supabase.admin
       .from('offers')
       .insert({
-        restaurant_id: dto.restaurantId,
+        restaurant_id: restaurant.id,
         title: dto.title,
         description: dto.description,
         original_price: dto.originalPrice,
@@ -91,7 +91,7 @@ export class OffersService {
     // Notificar a consumidores que tienen este restaurante en favoritos
     this.notifications
       .notifyFavoritesOfNewOffer(
-        dto.restaurantId,
+        restaurant.id,
         data.restaurants.name,
         data.title,
         data.emoji ?? '🍽️',

@@ -9,8 +9,9 @@ import {
 } from 'class-validator';
 
 export class CreateOfferDto {
+  @IsOptional()
   @IsUUID()
-  restaurantId: string;
+  restaurantId?: string;
 
   @IsString()
   title: string;

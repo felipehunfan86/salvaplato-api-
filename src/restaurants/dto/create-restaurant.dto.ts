@@ -1,6 +1,5 @@
 import {
   IsNumber,
-  IsObject,
   IsOptional,
   IsString,
   Max,
@@ -23,20 +22,22 @@ export class CreateRestaurantDto {
   @IsString()
   address: string;
 
+  @IsOptional()
   @IsNumber()
   @Min(-90) @Max(90)
-  latitude: number;
+  latitude?: number;
 
+  @IsOptional()
   @IsNumber()
   @Min(-180) @Max(180)
-  longitude: number;
+  longitude?: number;
 
   @IsString()
   cuisineType: string;
 
   @IsOptional()
-  @IsObject()
-  schedule?: Record<string, string>;
+  @IsString()
+  schedule?: string;
 
   @IsOptional()
   @IsString()
