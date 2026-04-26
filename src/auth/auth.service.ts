@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -46,6 +47,21 @@ export class AuthService {
     if (error) throw new UnauthorizedException('Credenciales inválidas');
 
     return { user: data.user, session: data.session };
+  }
+
+  async forgotPassword(email: string) {
+    const { data: exists, error: rpcError } = await this.supabase.admin
+      .rpc('check_email_exists', { p_email: email.toLowerCase() });
+
+    if (rpcError) throw new Error('Error al verificar el correo');
+    if (!exists) throw new NotFoundException('Este correo no está registrado en SalvaPlato');
+
+    const { error } = await this.supabase.client.auth.resetPasswordForEmail(
+      email.toLowerCase(),
+    );
+    if (error) throw new Error('No se pudo enviar el correo de recuperación');
+
+    return { message: 'Correo de recuperación enviado' };
   }
 
   async getProfile(userId: string) {
